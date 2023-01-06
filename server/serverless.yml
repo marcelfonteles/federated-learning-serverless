@@ -1,4 +1,4 @@
-service: fourth-serverless
+service: nine-serverless
 
 provider:
   name: aws #cloud provider
@@ -8,8 +8,26 @@ provider:
 
 functions:
   helloWorld:
-    image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/fifth-serverless:latest #PATH to model image - ecr_url@digest
+    image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/ten-serverless:latest
     events:
       - http:
-          path: log #url path
-          method: post #request type
+          path: get_data
+          method: post
+      - http:
+          path: get_clients_to_train
+          method: post
+      - http:
+          path: get_model
+          method: post
+      - http:
+          path: send_model
+          method: post
+      - http:
+          path: subscribe
+          method: post
+      - http:
+          path: start_training
+          method: post
+      - http:
+          path: home
+          method: post

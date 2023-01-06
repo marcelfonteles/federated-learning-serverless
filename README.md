@@ -39,26 +39,48 @@ This process will repeat 10 times and after that we will have a global model rea
 ### Building the experiments
 If you are on a Mac M1, you must specify the platform
 ```
-docker buildx build --platform linux/amd64 -t fourth-serverless .
-docker build --platform linux/amd64 -t fifth-serverless .
+docker buildx build --platform linux/amd64 -t image-name .
+docker build --platform linux/amd64 -t image-name .
 ```
 
+Docker build
 ```
-aws ecr create-repository --repository-name fifth-serverless
-	
+docker build -t ten-serverless .
+```
+
+Local test
+```
+docker run -p 8080:8080 ten-serverless
+```
+
+
+Create ECR Repository
+```
+aws ecr create-repository --repository-name ten-serverless
+```
+
+Define shell environment variables
+```
 aws_region=us-east-1
 aws_account_id=
+```
 
-
+Login
+```
 aws ecr get-login-password \
 --region $aws_region \
 | docker login \
 --username AWS \
 --password-stdin $aws_account_id.dkr.ecr.$aws_region.amazonaws.com
+```
 
-docker tag fifth-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/fifth-serverless
-
-docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/fifth-serverless
+Create tag
+```
+docker tag ten-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/ten-serverless
+```
+Docker Push
+```
+docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/ten-serverless
 ```
 
 Get image URI and add to the `serverless.yml` file and then execute the following command:
