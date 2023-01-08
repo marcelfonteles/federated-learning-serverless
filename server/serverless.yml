@@ -3,7 +3,7 @@ service: server-serverless
 provider:
   name: aws #cloud provider
   region: us-east-1
-  memorySize: 10240 #memory usage
+  memorySize: 2048 #memory usage
   timeout: 300
 
 functions:
