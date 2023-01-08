@@ -4,7 +4,7 @@ import numpy as np
 
 def get_test_dataset(dataset):
     if dataset == 'mnist':
-        data_dir = '../data/mnist/'
+        data_dir = '/tmp/mnist/'
         apply_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))])
@@ -12,7 +12,7 @@ def get_test_dataset(dataset):
         test_dataset = datasets.MNIST(data_dir, train=False, download=True, transform=apply_transform)
 
     elif dataset == 'cifar10':
-        data_dir = '../data/cifar/'
+        data_dir = '/tmp/cifar/'
         apply_transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -24,14 +24,14 @@ def get_test_dataset(dataset):
 
 def get_user_group(dataset, num_users, dict_users):
     if dataset == 'mnist':
-        data_dir = '../data/mnist/'
+        data_dir = '/tmp/mnist/'
         apply_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))])
 
         train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=apply_transform)
     elif dataset == 'cifar10':
-        data_dir = '../data/cifar/'
+        data_dir = '/tmp/cifar/'
         apply_transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])

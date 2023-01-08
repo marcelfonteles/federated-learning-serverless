@@ -15,7 +15,7 @@ from src.datasets import get_dataset
 from src.update import LocalUpdate
 from src.utils import logging
 
-base_url = 'http://localhost:3000/'
+base_url = 'https://plxyyoan0c.execute-api.us-east-1.amazonaws.com/dev/'
 # Subscribing to server
 client_id = -1
 response = requests.post(base_url + 'subscribe', json={"path": "subscribe"})

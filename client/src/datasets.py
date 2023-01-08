@@ -4,7 +4,7 @@ import numpy as np
 
 def get_dataset(dataset, num_users):
     if dataset == 'mnist':
-        data_dir = '../data/mnist/'
+        data_dir = '/tmp/mnist/'
         apply_transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))])
@@ -16,7 +16,7 @@ def get_dataset(dataset, num_users):
         # user_group = mnist_iid(train_dataset, num_users)
 
     elif dataset == 'cifar10':
-        data_dir = '../data/cifar/'
+        data_dir = '/tmp/cifar/'
         apply_transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
