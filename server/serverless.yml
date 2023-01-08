@@ -1,14 +1,14 @@
-service: nine-serverless
+service: server-serverless
 
 provider:
   name: aws #cloud provider
-  region: us-east-1 #region (mumbai)
+  region: us-east-1
   memorySize: 10240 #memory usage
   timeout: 300
 
 functions:
-  helloWorld:
-    image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/ten-serverless:latest
+  server-0:
+    image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/server-serverless:latest
     events:
       - http:
           path: get_data
