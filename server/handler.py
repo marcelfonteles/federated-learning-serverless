@@ -12,6 +12,7 @@ from src.datasets import get_test_dataset, get_user_group
 from src.database import get_database
 
 def server(event, context):
+    print(event)
     if 'send_model' in event['path']:
         # OK (5)
         return send_model(event)
@@ -55,7 +56,12 @@ def send_model(event):
 
     records = [record for record in training_db.global_models.find().sort('id', pymongo.DESCENDING)]
     if len(records) == 0:
-        raise 'No Global Model Available'
+        print('No Global Model Available (0)')
+        return {
+                "statusCode": 200,
+                "body": json.dumps('No Global Model Available (0)')
+        }    
+        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         n_clients = global_model_record['numberOfClients']
@@ -154,7 +160,10 @@ def send_model(event):
                 {'$set': {'testAccuracy': test_acc, 'updatedAt': datetime.now()}
             })
 
-    return {}
+    return {
+                "statusCode": 200,
+                "body": json.dumps('send_model finish')
+            }    
 
 # OK OK
 def get_clients_to_train(event):
@@ -164,14 +173,22 @@ def get_clients_to_train(event):
     
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
     if len(records) == 0:
-        raise 'No Global Model Available'
+        print('No Global Model Available (1)')
+        return {
+                    "statusCode": 200,
+                    "body": json.dumps('No Global Model Available (1)')
+                }
+        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         global_current_epoch = records[0]['currentEpoch']
 
     records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.DESCENDING)]
     if len(records) == 0 or global_model_record['isTraining'] == False:
-        return {"train": False}
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"train": False})
+            }
     else:
         training_clients_id = records[0]['id']
         clients_to_train = records[0]['clients']
@@ -185,9 +202,15 @@ def get_clients_to_train(event):
             {'id': training_clients_id},
             {'$set': {'clients': clients_to_train, 'trainedClients': trained_clients}}
         )
-        return {"train": True, "epoch": global_current_epoch}
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"train": True, "epoch": global_current_epoch})
+            } 
     else:
-        return {"train": False}
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"train": False})
+            } 
 
 
 # OK OK
@@ -198,7 +221,12 @@ def get_data(event):
     # get global model
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
     if len(records) == 0:
-        raise 'No Global Model Available'
+        print('No Global Model Available (2)')
+        return {
+                "statusCode": 200,
+                "body": json.dumps('No Global Model Available (2)')
+            } 
+        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
     
@@ -215,15 +243,23 @@ def get_data(event):
         {'globalModelId': global_model_record['id'], 'id': client['id']},
         {'$set': {'datasetIndexes': str(list(dict_user)), 'updatedAt': datetime.now()}
     })
-    return {"dict_user": str(list(dict_user))}
+    return {
+                "statusCode": 200,
+                "body": json.dumps({"dict_user": str(list(dict_user))})
+        } 
 
 
-# OK (?)
+# OK OK
 def get_model():
     training_db = get_database()
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
     if len(records) == 0:
-        raise 'No Global Model Available'
+        print('No Global Model Available (3)')
+        return {
+                "statusCode": 200,
+                "body": json.dumps('No Global Model Available (3)')
+            }  
+        # raise 'No Global Model Available'
     else:
         serialized = records[0]['serialized']
 
@@ -240,7 +276,12 @@ def subscribe():
     # get global model
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
     if len(records) == 0:
-        raise 'No Global Model Available'
+        print('No Global Model Available (4)')
+        return {
+                "statusCode": 200,
+                "body": json.dumps('No Global Model Available (4)')
+            }   
+        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         n_clients = global_model_record['numberOfClients']
@@ -248,6 +289,7 @@ def subscribe():
 
     # get clients of this model
     clients = [record for record in training_db.clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.ASCENDING)]
+
 
     if len(clients) < n_clients:
         client_id = len(clients)
@@ -258,9 +300,11 @@ def subscribe():
             'createdAt': datetime.now(),
             'updatedAt': datetime.now(),
         }
+
         training_db.clients.insert_one(client)
         clients.append(client)
         if len(clients) == n_clients:
+            
             m = max(int(n_clients_to_train), 1)
             clients_id_to_train = np.random.choice(range(n_clients), m, replace=False).tolist()
             records = [record for record in training_db.training_clients.find().sort('createdAt', pymongo.DESCENDING)]
@@ -271,9 +315,15 @@ def subscribe():
 
             records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
             if len(records) == 0:
-                raise 'No Global Model Available'
+                print('No Global Model Available (5)')
+                return {
+                        "statusCode": 200,
+                        "body": json.dumps('No Global Model Available (5)')
+                    }  
+                # raise 'No Global Model Available'
             else:
                 global_model_id = records[0]['id']
+            
 
             training_db.training_clients.insert_one({
                 'id': training_clients_id,
@@ -284,9 +334,16 @@ def subscribe():
                 'createdAt': datetime.now(),
                 'updatedAt': datetime.now(),
             })
-        return {"id": client_id}
+
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"id": client_id})
+            }  
     else:
-        return {"id": None}
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"id": -1})
+            }  
 
 
 # OK OK

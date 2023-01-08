@@ -63,6 +63,8 @@ Define shell environment variables
 ```
 aws_region=us-east-1
 aws_account_id=
+
+aws_region=us-east-1 && aws_account_id=
 ```
 
 Login
