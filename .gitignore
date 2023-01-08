@@ -140,3 +140,5 @@ dmypy.json
 
 # dataset files
 ./data
+
+./server/.serverless

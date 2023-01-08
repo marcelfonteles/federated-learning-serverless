@@ -45,18 +45,18 @@ docker build --platform linux/amd64 -t image-name .
 
 Docker build
 ```
-docker build -t ten-serverless .
+docker build -t server-serverless .
 ```
 
 Local test
 ```
-docker run -p 8080:8080 ten-serverless
+docker run -p 8080:8080 server-serverless
 ```
 
 
 Create ECR Repository
 ```
-aws ecr create-repository --repository-name ten-serverless
+aws ecr create-repository --repository-name server-serverless
 ```
 
 Define shell environment variables
@@ -76,11 +76,11 @@ aws ecr get-login-password \
 
 Create tag
 ```
-docker tag ten-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/ten-serverless
+docker tag server-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless
 ```
 Docker Push
 ```
-docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/ten-serverless
+docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless
 ```
 
 Get image URI and add to the `serverless.yml` file and then execute the following command:
