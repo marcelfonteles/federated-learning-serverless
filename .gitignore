@@ -142,3 +142,5 @@ dmypy.json
 ./data
 
 ./server/.serverless
+
+.DS_Store
