@@ -5,6 +5,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 import copy
 import os
 import json
+import base64
 
 import torch
 from PIL import Image
@@ -25,8 +26,9 @@ if client_id == None:
 
 
 # Initialization: get the last version of global model
-response = requests.post(base_url + 'get_model', json={"path":"get_model"})
-local_weights = pickle.loads(response.content)
+response = requests.post(base_url + 'get_model', json={"path": "get_model"})
+bin_weights = base64.b64decode(response.text)
+local_weights = pickle.loads(bin_weights)
 
 dataset = 'mnist'  # or mnist
 if dataset == 'mnist':
@@ -41,9 +43,9 @@ local_model.train()
 
 
 # Initialization: randomly select the data from dataset for this client
-n_clients = 10
+n_clients = 1
 headers = {'Content-Type': 'application/json'}
-response = requests.post(base_url + 'get_data', json={"path":"get_data", "client_id": client_id}, headers=headers)
+response = requests.post(base_url + 'get_data', json={"path": "get_data", "client_id": client_id}, headers=headers)
 user_group = response.json()['dict_user']
 user_group = set(json.loads(user_group))
 train_dataset, test_dataset = get_dataset(dataset, n_clients)
@@ -53,6 +55,7 @@ train_dataset, test_dataset = get_dataset(dataset, n_clients)
 dirname = os.path.dirname(__file__)
 log_path = os.path.join(dirname, 'logs/' + str(client_id) + '.log')
 logging(f'| #### Starting a new client #### |', True, log_path)
+
 
 # Flask App
 app = Flask(__name__)
@@ -71,7 +74,8 @@ def train():
         global_epoch = res_json['epoch']
         # Get the newest global model
         res = requests.post(base_url + 'get_model')
-        local_weights = pickle.loads(res.content)
+        bin_local_weights = base64.b64decode(res.content)
+        local_weights = pickle.loads(bin_local_weights)
         if dataset == 'mnist':
             local_model = CNNMnist()
         elif dataset == 'cifar10':
@@ -88,9 +92,11 @@ def train():
 
         # Send new local model to server
         serialized = pickle.dumps(w)
+        b64 = base64.b64encode(serialized).decode('utf-8')
         url = base_url + 'send_model'
-        headers = {"Client-Id": str(client_id), 'Content-Type': 'application/octet-stream'}
-        requests.post(url, data=serialized, headers=headers)
+        headers = {"client-id": str(client_id), 'Content-Type': 'application/json'}
+        res = requests.post(url, json={'model': b64}, headers=headers)
+        print(res)
 
 
 scheduler = BackgroundScheduler()
