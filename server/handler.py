@@ -30,7 +30,7 @@ def server(event, context):
         return subscribe()
     elif 'start_training' in event['path']:
         # OK (0)
-        return start_training()
+        return start_training(event)
     else:
         # OK
         return home()
@@ -349,8 +349,11 @@ def subscribe():
 
 
 # OK OK
-def start_training():
-    dataset = 'mnist'  # or mnist
+def start_training(event):
+    body = json.loads(event['body'])
+    dataset = body['dataset']
+    number_of_clients = body['numberOfClients']
+    frac_to_train = body['fracToTrain']
     if dataset == 'mnist':
         # Training for MNIST
         global_model = CNNMnist()
@@ -374,8 +377,8 @@ def start_training():
             'currentEpoch': 1,
             'isTraining': True,
             'testAccuracy': 0,
-            'numberOfClients': 1,
-            'fracToTrain': 1.00,
+            'numberOfClients': number_of_clients,
+            'fracToTrain': frac_to_train,
             'createdAt': datetime.now(),
             'updatedAt': datetime.now(),
         })
@@ -396,8 +399,8 @@ def start_training():
                 'currentEpoch': 1,
                 'isTraining': True,
                 'testAccuracy': 0,
-                'numberOfClients': 1,
-                'fracToTrain': 1.00,
+                'numberOfClients': number_of_clients,
+                'fracToTrain': frac_to_train,
                 'createdAt': datetime.now(),
                 'updatedAt': datetime.now(),
             })
