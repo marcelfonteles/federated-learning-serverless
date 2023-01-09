@@ -106,6 +106,7 @@ def send_model(event):
         n_epochs = global_model_record['totalEpochs']
         print(f'Fazendo média | epoch {current_epoch}')
         global_weights = average_weights(clients_weights)
+        serialized = pickle.dumps(global_weights)
 
         # update global weights
         if global_model_record['dataset'] == 'mnist':
@@ -131,7 +132,7 @@ def send_model(event):
 
             training_db.global_models.update_one(
                 {'id': global_model_record['id']},
-                {'$set': {'currentEpoch': global_model_record['currentEpoch'] + 1, 'updatedAt': datetime.now()}
+                {'$set': {'currentEpoch': global_model_record['currentEpoch'] + 1, 'serialized': serialized, 'updatedAt': datetime.now()}
             })
 
             training_db.training_clients.insert_one({
