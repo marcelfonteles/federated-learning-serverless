@@ -50,7 +50,7 @@ docker build -t server-serverless .
 
 Local test
 ```
-docker run -p 8080:8080 server-serverless
+docker run --rm -p 8080:8080 server-serverless
 ```
 
 
@@ -90,6 +90,10 @@ Get image URI and add to the `serverless.yml` file and then execute the followin
 serverless deploy
 ```
 
-
+```
+docker tag server-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless && \
+docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless && \
+serverless deploy
+```
 
 ### Running the experiments
