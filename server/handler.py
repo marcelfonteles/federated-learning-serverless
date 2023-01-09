@@ -36,7 +36,7 @@ def server(event, context):
         return home()
     
 
-# OK (?)
+# OK OK
 def send_model(event):
     training_db = get_database()
     # Insert model data in local model table
@@ -165,6 +165,7 @@ def send_model(event):
                 "body": json.dumps('send_model finish')
             }    
 
+
 # OK OK
 def get_clients_to_train(event):
     training_db = get_database()
@@ -264,7 +265,7 @@ def get_model():
         serialized = records[0]['serialized']
 
     return {
-            'headers': { "Content-Type": "application/octet-stream" },
+            'headers': { "Content-Type": "application/octet-stream", 'Clients-Number': records[0]['numberOfClients'] },
             'statusCode': 200,
             'body': base64.b64encode(serialized).decode('utf-8')
     }
