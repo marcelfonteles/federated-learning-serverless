@@ -97,3 +97,11 @@ serverless deploy
 ```
 
 ### Running the experiments
+Deploy the ECR to AWS and create one lambda function with the api gateway 
+the same way that is configured on `serverless.yml` file. Then execute the following command:
+```
+sh start.sh
+```
+
+### Results
+MNIST Test Accuracy using federated learning strategy: 96.67%
