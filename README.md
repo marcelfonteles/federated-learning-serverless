@@ -96,12 +96,18 @@ docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless 
 serverless deploy
 ```
 
-### Running the experiments
-Deploy the ECR to AWS and create one lambda function with the api gateway 
-the same way that is configured on `serverless.yml` file. Then execute the following command:
+### Running the experiments (AWS Lambda)
+You must have access to one mongodb database and fill the `MONGODB_URL` in Dockerfile
+
+Firstly, you must create one AWS Lambda function with the Dockerfile in this repository, and you could do that by
+following this article: https://www.serverless.com/blog/deploying-pytorch-model-as-a-serverless-service
+
+After deployed the lambda function you can run the following command
 ```
-sh start.sh
+sh client/start.sh
 ```
+
+### Running the experiments (Apache OpenWhisk)
 
 ### Results
 MNIST Test Accuracy using federated learning strategy: 96.67%
