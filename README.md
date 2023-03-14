@@ -36,13 +36,13 @@ On the client, the local model will be trained using CNN and 10 epochs, after th
 sent to the server and then the fedAvg algorithm will be executed to generate a new global model. 
 This process will repeat 10 times and after that we will have a global model ready to use for predictions for new data.
 
-### Building the experiments
-If you are on a Mac M1, you must specify the platform
+### Building the experiments (AWS Lambda)
+#### Attention: if you are on a Mac M1, you must specify the platform
 ```
 docker buildx build --platform linux/amd64 -t image-name .
 docker build --platform linux/amd64 -t image-name .
 ```
-
+---
 Docker build
 ```
 docker build -t server-serverless .
@@ -108,6 +108,7 @@ sh client/start.sh
 ```
 
 ### Running the experiments (Apache OpenWhisk)
+To do: trying to make it work 
 
 ### Results
 MNIST Test Accuracy using federated learning strategy: 96.67%
