@@ -14,15 +14,12 @@ def main(params):
     route = params['__ow_headers']['x-forwarded-url']
     if 'send_model' in route:
         # OK (5)
-        return { 'message': 'send_model', route: route }
-        # return send_model(params)
+        return send_model(params)
     elif 'get_clients_to_train' in route:
         # OK (4)
-        return { 'message': 'get_clients_to_train', route: route }
-        # return get_clients_to_train(params)
+        return get_clients_to_train(params)
     elif 'get_data' in route:
         # OK (3)
-        # return { 'message': 'get_data', route: route }
         return get_data(params)
     elif 'get_model' in route:
         # OK (2)
@@ -35,194 +32,190 @@ def main(params):
         return start_training(params)
     else:
         # OK
-        return { 'message': 'home', route: route, 'params': params }
-        # return home()
+        return home()
 
 
-# # OK OK
-# def send_model(event):
-#     training_db = get_database()
-#     # Insert model data in local model table
-#     headers = event['__ow_headers']
-#     client_id = int(headers['client-id'])
+# OK OK
+def send_model(event):
+    training_db = get_database()
+    # Insert model data in local model table
+    headers = event['__ow_headers']
+    client_id = int(headers['client-id'])
 
-#     body = json.loads(event['body'])
-#     model = body['model']
-#     serialized = base64.b64decode(model)
-#     content = pickle.loads(serialized)
+    model = event['model']
+    serialized = base64.b64decode(model)
+    content = pickle.loads(serialized)
 
-#     records = [record for record in training_db.local_models.find().sort('id', pymongo.DESCENDING)]
-#     if len(records) == 0:
-#         local_model_id = 1
-#     else:
-#         local_model_id = records[0]['id'] + 1
+    records = [record for record in training_db.local_models.find().sort('id', pymongo.DESCENDING)]
+    if len(records) == 0:
+        local_model_id = 1
+    else:
+        local_model_id = records[0]['id'] + 1
 
-#     records = [record for record in training_db.global_models.find().sort('id', pymongo.DESCENDING)]
-#     if len(records) == 0:
-#         print('No Global Model Available (0)')
-#         return {
-#                 "statusCode": 200,
-#                 "body": json.dumps('No Global Model Available (0)')
-#         }    
-#         # raise 'No Global Model Available'
-#     else:
-#         global_model_record = records[0]
-#         n_clients = global_model_record['numberOfClients']
-#         n_clients_to_train = global_model_record['numberOfClients'] * global_model_record['fracToTrain']
+    records = [record for record in training_db.global_models.find().sort('id', pymongo.DESCENDING)]
+    if len(records) == 0:
+        print('No Global Model Available (0)')
+        return {
+                "statusCode": 200,
+                "body": json.dumps('No Global Model Available (0)')
+        }    
+        # raise 'No Global Model Available'
+    else:
+        global_model_record = records[0]
+        n_clients = global_model_record['numberOfClients']
+        n_clients_to_train = global_model_record['numberOfClients'] * global_model_record['fracToTrain']
 
-#     find_query = {
-#         'clientId': client_id,
-#         'globalModelId': global_model_record['id'],
-#     }
-#     records = [record for record in training_db.local_models.find(find_query).sort('id', pymongo.DESCENDING)]
-#     if len(records) == 0:
-#         training_db.local_models.insert_one({
-#             'id': local_model_id,
-#             'clientId': client_id,
-#             'globalModelId': global_model_record['id'],
-#             'model': serialized,
-#             'epoch': global_model_record['currentEpoch'],
-#             'createdAt': datetime.now(),
-#             'updatedAt': datetime.now(),
-#         })
-#     else:
-#         training_db.local_models.update_one(
-#             {'clientId': client_id, 'globalModelId': global_model_record['id']},
-#             {'$set': {'model': serialized, 'epoch': global_model_record['currentEpoch'], 'updatedAt': datetime.now()}}
-#         )
+    find_query = {
+        'clientId': client_id,
+        'globalModelId': global_model_record['id'],
+    }
+    records = [record for record in training_db.local_models.find(find_query).sort('id', pymongo.DESCENDING)]
+    if len(records) == 0:
+        training_db.local_models.insert_one({
+            'id': local_model_id,
+            'clientId': client_id,
+            'globalModelId': global_model_record['id'],
+            'model': serialized,
+            'epoch': global_model_record['currentEpoch'],
+            'createdAt': datetime.now(),
+            'updatedAt': datetime.now(),
+        })
+    else:
+        training_db.local_models.update_one(
+            {'clientId': client_id, 'globalModelId': global_model_record['id']},
+            {'$set': {'model': serialized, 'epoch': global_model_record['currentEpoch'], 'updatedAt': datetime.now()}}
+        )
 
-#     # This code bellow must go to another endpoint or go to a cronjob, so we can guarantee that will create only one record for epoch.
-#     clients_weights = []
-#     find_query = {
-#         'epoch': global_model_record['currentEpoch'],
-#         'globalModelId': global_model_record['id'],
-#     }
-#     records = [record for record in training_db.local_models.find(find_query).sort('id', pymongo.DESCENDING)]
-#     for record in records:
-#         weights = pickle.loads(record['model'])
-#         clients_weights.append(weights)
+    # This code bellow must go to another endpoint or go to a cronjob, so we can guarantee that will create only one record for epoch.
+    clients_weights = []
+    find_query = {
+        'epoch': global_model_record['currentEpoch'],
+        'globalModelId': global_model_record['id'],
+    }
+    records = [record for record in training_db.local_models.find(find_query).sort('id', pymongo.DESCENDING)]
+    for record in records:
+        weights = pickle.loads(record['model'])
+        clients_weights.append(weights)
 
-#     if len(clients_weights) == n_clients_to_train:
-#         # fedAvg
-#         # update global weights
-#         current_epoch = global_model_record['currentEpoch']
-#         n_epochs = global_model_record['totalEpochs']
-#         print(f'Fazendo média | epoch {current_epoch}')
-#         global_weights = average_weights(clients_weights)
-#         serialized = pickle.dumps(global_weights)
+    if len(clients_weights) == n_clients_to_train:
+        # fedAvg
+        # update global weights
+        current_epoch = global_model_record['currentEpoch']
+        n_epochs = global_model_record['totalEpochs']
+        print('Fazendo média | epoch {}'.format(current_epoch))
+        global_weights = average_weights(clients_weights)
+        serialized = pickle.dumps(global_weights)
 
-#         # update global weights
-#         if global_model_record['dataset'] == 'mnist':
-#             # Training for MNIST
-#             global_model = CNNMnist()
-#         else:
-#             # Training for CIFAR10
-#             global_model = CNNCifar()
-#         global_model.train()
-#         global_model.load_state_dict(global_weights)
+        # update global weights
+        if global_model_record['dataset'] == 'mnist':
+            # Training for MNIST
+            global_model = CNNMnist()
+        else:
+            # Training for CIFAR10
+            global_model = CNNCifar()
+        global_model.train()
+        global_model.load_state_dict(global_weights)
 
-#         # random select new clients
-#         if current_epoch < n_epochs:
-#             print(f'Escolhendo novos clientes | epoch {current_epoch}')
-#             m = max(int(n_clients_to_train), 1)
-#             clients_id_to_train = np.random.choice(range(n_clients), m, replace=False).tolist()
+        # random select new clients
+        if current_epoch < n_epochs:
+            print('Escolhendo novos clientes | epoch {}'.format(current_epoch))
+            m = max(int(n_clients_to_train), 1)
+            clients_id_to_train = np.random.choice(range(n_clients), m, replace=False).tolist()
 
-#             records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('createdAt', pymongo.DESCENDING)]
-#             if len(records) == 0:
-#                 training_clients_id = 1
-#             else:
-#                 training_clients_id = records[0]['id'] + 1
+            records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('createdAt', pymongo.DESCENDING)]
+            if len(records) == 0:
+                training_clients_id = 1
+            else:
+                training_clients_id = records[0]['id'] + 1
 
-#             training_db.global_models.update_one(
-#                 {'id': global_model_record['id']},
-#                 {'$set': {'currentEpoch': global_model_record['currentEpoch'] + 1, 'serialized': serialized, 'updatedAt': datetime.now()}
-#             })
+            training_db.global_models.update_one(
+                {'id': global_model_record['id']},
+                {'$set': {'currentEpoch': global_model_record['currentEpoch'] + 1, 'serialized': serialized, 'updatedAt': datetime.now()}
+            })
 
-#             training_db.training_clients.insert_one({
-#                 'id': training_clients_id,
-#                 'clients': clients_id_to_train,
-#                 'trainedClients': [],
-#                 'globalModelId': global_model_record['id'],
-#                 'currentEpoch': global_model_record['currentEpoch'] + 1,
-#                 'createdAt': datetime.now(),
-#                 'updatedAt': datetime.now(),
-#             })
-#         else:
-#             training_db.global_models.update_one(
-#                 {'id': global_model_record['id']},
-#                 {'$set': {'isTraining': False, 'updatedAt': datetime.now()}
-#             })
-#             print('training is complete')
-#             test_dataset = get_test_dataset(global_model_record['dataset'])
-#             test_acc, test_loss = test_inference(global_model, test_dataset)
+            training_db.training_clients.insert_one({
+                'id': training_clients_id,
+                'clients': clients_id_to_train,
+                'trainedClients': [],
+                'globalModelId': global_model_record['id'],
+                'currentEpoch': global_model_record['currentEpoch'] + 1,
+                'createdAt': datetime.now(),
+                'updatedAt': datetime.now(),
+            })
+        else:
+            training_db.global_models.update_one(
+                {'id': global_model_record['id']},
+                {'$set': {'isTraining': False, 'updatedAt': datetime.now()}
+            })
+            print('training is complete')
+            test_dataset = get_test_dataset(global_model_record['dataset'])
+            test_acc, test_loss = test_inference(global_model, test_dataset)
 
-#             print(f' \n Results after {current_epoch} global rounds of training:')
-#             # print("|---- Avg Train Accuracy: {:.2f}%".format(100 * train_accuracy[-1]))
-#             print("|---- Test Accuracy: {:.2f}%".format(100 * test_acc))
-#             training_db.global_models.update_one(
-#                 {'id': global_model_record['id']},
-#                 {'$set': {'testAccuracy': test_acc, 'updatedAt': datetime.now()}
-#             })
+            print(' \n Results after {} global rounds of training:'.format(current_epoch))
+            # print("|---- Avg Train Accuracy: {:.2f}%".format(100 * train_accuracy[-1]))
+            print("|---- Test Accuracy: {:.2f}%".format(100 * test_acc))
+            training_db.global_models.update_one(
+                {'id': global_model_record['id']},
+                {'$set': {'testAccuracy': test_acc, 'updatedAt': datetime.now()}
+            })
 
-#     return {
-#                 "statusCode": 200,
-#                 "body": json.dumps('send_model finish')
-#             }    
+    return {
+                "statusCode": 200,
+                "body": json.dumps('send_model finish')
+            }    
 
 
-# # OK OK
-# def get_clients_to_train(event):
-#     training_db = get_database()
-#     body = json.loads(event['body'])
-#     client_id = body['client_id']
+# OK OK
+def get_clients_to_train(event):
+    training_db = get_database()
+    client_id = event['client_id']
     
-#     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
-#     if len(records) == 0:
-#         print('No Global Model Available (1)')
-#         return {
-#                     "statusCode": 200,
-#                     "body": json.dumps('No Global Model Available (1)')
-#                 }
-#         # raise 'No Global Model Available'
-#     else:
-#         global_model_record = records[0]
-#         global_current_epoch = records[0]['currentEpoch']
+    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
+    if len(records) == 0:
+        print('No Global Model Available (1)')
+        return {
+                    "statusCode": 200,
+                    "body": json.dumps('No Global Model Available (1)')
+                }
+        # raise 'No Global Model Available'
+    else:
+        global_model_record = records[0]
+        global_current_epoch = records[0]['currentEpoch']
 
-#     records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.DESCENDING)]
-#     if len(records) == 0 or global_model_record['isTraining'] == False:
-#         return {
-#                 "statusCode": 200,
-#                 "body": json.dumps({"train": False})
-#             }
-#     else:
-#         training_clients_id = records[0]['id']
-#         clients_to_train = records[0]['clients']
-#         trained_clients = records[0]['trainedClients']
-#         clients_to_train_epoch = records[0]['currentEpoch']
+    records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.DESCENDING)]
+    if len(records) == 0 or global_model_record['isTraining'] == False:
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"train": False})
+            }
+    else:
+        training_clients_id = records[0]['id']
+        clients_to_train = records[0]['clients']
+        trained_clients = records[0]['trainedClients']
+        clients_to_train_epoch = records[0]['currentEpoch']
 
-#     if clients_to_train.count(client_id) and global_current_epoch == clients_to_train_epoch:
-#         clients_to_train.remove(client_id)
-#         trained_clients.append(client_id)
-#         training_db.training_clients.update_one(
-#             {'id': training_clients_id},
-#             {'$set': {'clients': clients_to_train, 'trainedClients': trained_clients}}
-#         )
-#         return {
-#                 "statusCode": 200,
-#                 "body": json.dumps({"train": True, "epoch": global_current_epoch})
-#             } 
-#     else:
-#         return {
-#                 "statusCode": 200,
-#                 "body": json.dumps({"train": False})
-#             } 
+    if clients_to_train.count(client_id) and global_current_epoch == clients_to_train_epoch:
+        clients_to_train.remove(client_id)
+        trained_clients.append(client_id)
+        training_db.training_clients.update_one(
+            {'id': training_clients_id},
+            {'$set': {'clients': clients_to_train, 'trainedClients': trained_clients}}
+        )
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"train": True, "epoch": global_current_epoch})
+            } 
+    else:
+        return {
+                "statusCode": 200,
+                "body": json.dumps({"train": False})
+            } 
 
 
 # OK OK
 def get_data(event):
     training_db = get_database()
-    body = json.loads(event['body'])
-    client_id = body['client_id']
+    client_id = event['client_id']
     # get global model
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
     if len(records) == 0:
@@ -417,11 +410,11 @@ def start_training(event):
 
 
 # OK OK
-# def home():
-#     return {
-#         "statusCode": 200,
-#         "body": json.dumps('Home path')
-#     }
+def home():
+    return {
+        "statusCode": 200,
+        "body": json.dumps('Home path')
+    }
 
     
 
