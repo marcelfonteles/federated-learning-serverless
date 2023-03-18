@@ -29,6 +29,7 @@ if client_id == None:
 response = requests.post(base_url + 'get_model', json={"path": "get_model"})
 bin_weights = base64.b64decode(response.text)
 local_weights = pickle.loads(bin_weights)
+n_clients = int(response.headers['Clients-Number'])
 
 dataset = 'mnist'  # or mnist
 if dataset == 'mnist':
@@ -43,7 +44,6 @@ local_model.train()
 
 
 # Initialization: randomly select the data from dataset for this client
-n_clients = 1
 headers = {'Content-Type': 'application/json'}
 response = requests.post(base_url + 'get_data', json={"path": "get_data", "client_id": client_id}, headers=headers)
 user_group = response.json()['dict_user']
