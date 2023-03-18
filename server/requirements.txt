@@ -1,9 +1,4 @@
-flask
 torch
 torchvision
 numpy
-tensorboardx
-matplotlib
-apscheduler
-Pillow
 pymongo

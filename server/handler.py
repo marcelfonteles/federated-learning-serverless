@@ -1,5 +1,4 @@
 import json
-from flask import Flask, Response, request
 import pickle
 import numpy as np
 from datetime import datetime
