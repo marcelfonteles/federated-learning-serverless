@@ -144,3 +144,9 @@ dmypy.json
 ./server/.serverless
 
 .DS_Store
+
+# Zip files
+*.zip
+
+# Serverless files
+.serverless/

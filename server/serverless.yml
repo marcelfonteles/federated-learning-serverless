@@ -1,4 +1,4 @@
-service: server-serverless
+service: server-serverless-1
 
 provider:
   name: aws #cloud provider
@@ -7,7 +7,7 @@ provider:
   timeout: 300
 
 functions:
-  server-0:
+  server-function:
     image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/server-serverless:latest
     events:
       - http:
