@@ -1,43 +1,57 @@
 # Federated Learning Serverless
-This project will use the AWS Lambda to run the `server/app.py`
+Esse projeto implementa uma arquitetura Serverless para o uso em Aprendizado Federado
 
-### Requirements
-Install all the packages from requirments.txt
+### Requisitos
+Instale os pacotes necessários:
 
-- flask
-- torch
-- torchvision
-- numpy
-- tensorboardx
-- matplotlib
-- apscheduler
-- Pillow
+- Para o servidor
 ```
-pip3 install -r client/requirements.txt
-pip3 install -r server/requirements.txt
+torch
+torchvision
+numpy
+pymongo
 ```
 
-### Models and Dataset
-Currently, this project uses CNN with 2 layers and two types of dataset: MNIST and CIFAR10. We use `SGD` as optimizer
+- Para o cliente
+```
+APScheduler
+Pillow
+Flask
+Pickle
+requests
+numpy
+torch
+```
 
-### How does this project works
-We have two mainly pieces of code, one represents the server and other represents the client (the entity who owns 
-the data). So firstly we must start one server and after that we initialize multiple clients (this will 
-represent multiple users).
+```
+pip install -r clients/requirements.txt
+pip install -r server_ow/requirements.txt
+pip install -r server_aws/requirements.txt
+```
 
-After that, all client subscribe to the server and get a subset of the dataset, this is one way to guarantee that all
-users have different data. The server do not see the data and do not train any model with the data. The server 
-only randomly choose a subset of dataset and send this information to the user.
+### Modelos e dataset
+Atualmente esse projeto tem compatibilidade para o uso de CNN de duas camadas e dois dataset: MNIST e CIFAR10. É utilizado
+o `SGD` como otimizador.
 
-For default, we will use 20 clients and the dataset will be divided equally to all the users.
+### Como esse projeto funciona
+Temos duas peças principais de código, uma representa o servidor e a outra representa o cliente (a entidade que detém 
+os dados). Assim, em primeiro lugar, temos de iniciar um servidor e, depois disso, inicializamos vários clientes (isto 
+representam múltiplos utilizadores).
 
-After the division of the dataset, the server will randomly choose 10 clients at each epoch to train their local model.
-On the client, the local model will be trained using CNN and 10 epochs, after the training each local model will be
-sent to the server and then the fedAvg algorithm will be executed to generate a new global model. 
-This process will repeat 10 times and after that we will have a global model ready to use for predictions for new data.
+Depois disso, todos os clientes subscrevem no servidor e recebem um subconjunto do conjunto de dados, 
+esta é uma forma de garantir que todos os utilizadores têm dados diferentes. 
+O servidor não vê os dados e não treina nenhum modelo com os dados. O servidor 
+apenas escolhe aleatoriamente um subconjunto de dados e envia esta informação ao utilizador.
 
-### Building the experiments (AWS Lambda)
-#### Attention: if you are on a Mac M1, you must specify the platform
+Por padrão, utilizaremos 20 clientes e o conjunto de dados será dividido igualmente para todos os utilizadores.
+
+Após a divisão do conjunto de dados, o servidor irá escolher aleatoriamente 10 clientes em cada epoch para treinar o seu modelo local.
+No cliente, o modelo local será treinado utilizando a CNN e 10 epochs, após o treinamento, cada modelo local será
+enviado para o servidor e depois o algoritmo `fedAvg` será executado para gerar um novo modelo global. 
+Este processo irá repetir-se 10 vezes e depois disso teremos um modelo global pronto a usar para previsões de novos dados.
+
+### Executando os experimentos (AWS Lambda)
+#### Atenção: se você estiver utilizando um processador ARM (por exemplo, Mac M1), você precisa especificar a plataforma
 ```
 docker buildx build --platform linux/amd64 -t image-name .
 docker build --platform linux/amd64 -t image-name .
