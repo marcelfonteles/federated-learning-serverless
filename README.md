@@ -51,64 +51,108 @@ enviado para o servidor e depois o algoritmo `fedAvg` será executado para gerar
 Este processo irá repetir-se 10 vezes e depois disso teremos um modelo global pronto a usar para previsões de novos dados.
 
 ### Executando os experimentos (AWS Lambda)
-#### Atenção: se você estiver utilizando um processador ARM (por exemplo, Mac M1), você precisa especificar a plataforma
+##### Atenção: se você estiver utilizando um processador ARM (por exemplo, Mac M1), você precisa especificar a plataforma
 ```
 docker buildx build --platform linux/amd64 -t image-name .
 docker build --platform linux/amd64 -t image-name .
 ```
 ---
-Docker build
-```
-docker build -t server-serverless .
-```
+0. Variáveis de ambiente
+    Você deve criar um arquivo `.env` a partir de `.env.template` e preencher com suas variáveis de ambiente.
+        - `BASE_URL_AWS`: ao executar os experimentos com a AWS, será essa rota que o `cliente aws` irá fazer todos os requisições para o servidor. Irei mostrar mais abaixo como iremos obter o valor dessa variável
+        - `BASE_URL_OW`: ao executar os experimentos com o Apache OpenWhisk, será essa rota que o `cliente aws` irá fazer todos os requisições para o servidor. Irei mostrar mais abaixo como iremos obter o valor dessa variável
+        - `MONGODB_URL`: rota para o banco da dados que serão salvas as informações do experimento. Você já pode criar uma instância local ou utilizar o plano gratuito do [mongodb](https://www.mongodb.com/).
+    
+    ```bash
+    # Clients
+    BASE_URL_AWS=
+    BASE_URL_OW=
 
-Local test
-```
-docker run --rm -p 8080:8080 server-serverless
-```
+    # Servers
+    MONGODB_URL=
+    ```
+
+    Depois de definir as variáveis de ambiente nesse arquivo, execute o comando abaixo na raiz do projeto
+    ```bash
+    source .env
+    ```
+
+   
+1. Docker build
+    Faça o build da imagem docker do servidor para AWS. Execute o comando abaixo dentro do diretório `server_aws`
+
+    ```bash
+    docker build -t server-serverless .
+    ```
+    
+    Ou execute o comando abaixo na raiz do projeto
+    ```bash
+    docker build -t server-serverless server_aws
+    ```
+
+    Caso deseje executar testes na sua máquina, execute o comando abaixo 
+    ```bash
+    docker run --rm -p 8080:8080 server-serverless
+    ```
+
+    E a rota abaixo estará diponível para uso, assim você pode definir essa rota como variável de ambiente `BASE_URL_AWS` e poderá executar todos os testes locais sem a necessidade de fazer o deploy de uma função serverless na AWS:
+    ```
+    http://localhost:8080/2015-03-31/functions/function/invocations
+    ```
 
 
-Create ECR Repository
-```
-aws ecr create-repository --repository-name server-serverless
-```
+2. Create ECR Repository
+   É necessário criar um repositório no serviço ECR da AWS. Iremos subir a imagem docker que foi criada no passo 1. Na próxima etapa iremos utilizar essa imagem para fazer o deploy de uma função lambda.
+    ```
+    aws ecr create-repository --repository-name server-serverless
+    ```
 
-Define shell environment variables
-```
-aws_region=us-east-1
-aws_account_id=
+    Para o deploy da imagem docker no ECR é necessário o uso das duas variáveis de ambiente abaixo (você deve ter definido-as no passo 0):
+    ```bash
+    aws_region=us-east-1
+    aws_account_id=
+    ```
 
-aws_region=us-east-1 && aws_account_id=
-```
+    Realizar o login no ECR
+    ```
+    aws ecr get-login-password \
+    --region $aws_region \
+    | docker login \
+    --username AWS \
+    --password-stdin $aws_account_id.dkr.ecr.$aws_region.amazonaws.com
+    ```
 
-Login
-```
-aws ecr get-login-password \
---region $aws_region \
-| docker login \
---username AWS \
---password-stdin $aws_account_id.dkr.ecr.$aws_region.amazonaws.com
-```
+    Criar uma tag
+    ```
+    docker tag server-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless
+    ```
+    
+    Deploy da imagem docker
+    ```
+    docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless
+    ```
 
-Create tag
-```
-docker tag server-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless
-```
-Docker Push
-```
-docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless
-```
+    Depois do deploy da imagem, obtenha a URI, adicione no arquivo `server_aws/serverless.yml`. 
+    Um exemplo de URI: `184321656460.dkr.ecr.us-east-1.amazonaws.com/server-serverless:latest`
+    
+    E execute o comando abaixo:
+    ```
+    serverless deploy
+    ```
+    Após feito o deploy da função lambda, pega a **URL base** que será mostrada no terminal ao final da execução do comando acima.
 
-Get image URI and add to the `serverless.yml` file and then execute the following command:
-```
-serverless deploy
-```
+    Um exemplo de URL base: `[184321656460.dkr.ecr.us-east-1.amazonaws.com/server-serverless:latest](https://mm5cm3b2qf.execute-api.us-east-1.amazonaws.com/dev/)`
 
-```
-docker tag server-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless && \
-docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless && \
-serverless deploy
-```
+    Todos os comandos listados acimas:
+    ```
+    docker tag server-serverless $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless && \
+    docker push $aws_account_id.dkr.ecr.$aws_region.amazonaws.com/server-serverless && \
+    serverless deploy
+    ```
+
+    Extra: veja o [tutorial](https://www.serverless.com/blog/deploying-pytorch-model-as-a-serverless-service) do framework `serverless` para mais informações.
+3. Executando o cliente
+   
 
 ### Running the experiments (AWS Lambda)
 You must have access to one mongodb database and fill the `MONGODB_URL` in Dockerfile
