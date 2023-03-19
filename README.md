@@ -168,5 +168,50 @@ TODO:
 Esse repositório consegue executar com o Apache OpenWhisk, porém a documentação para isso ainda não foi escrita.
 ```
 
+## Prévia
+```
+BUILD STEPS
+
+docker build -t server_ow .
+docker tag server_ow marcelfonteles/server_ow
+docker push marcelfonteles/server_ow
+
+## Delete action
+wsk -i action delete server_ow
+
+## Delete zip file
+rm server_ow.zip
+
+## Create zip file
+zip -r server_ow.zip __main__.py another
+zip -r server_ow.zip ./*
+
+## Deploy action
+wsk -i action create server_ow --docker marcelfonteles/server_ow __main__.py
+wsk -i action create server_ow --docker marcelfonteles/server_ow __main__.py --web
+
+wsk -i action create server_ow --docker marcelfonteles/server_ow server_ow.zip
+wsk -i action create server_ow --docker marcelfonteles/server_ow server_ow.zip --web true
+
+## Test action
+wsk -i action invoke server_ow --result
+wsk -i action invoke server_ow --result -v
+
+## Crate API route
+wsk -i api create /jokes post server_ow --response-type json
+
+## All steps together
+wsk -i action delete server_ow && rm server_ow.zip && zip -r server_ow.zip ./* && wsk -i action create server_ow --docker marcelfonteles/server_ow server_ow.zip --web true
+wsk -i api create /root post server_ow --response-type json
+
+wsk -i api create /send_model post server_ow --response-type json
+wsk -i api create /get_clients_to_train post server_ow --response-type json
+wsk -i api create /get_data post server_ow --response-type json
+wsk -i api create /get_model post server_ow --response-type json
+wsk -i api create /subscribe post server_ow --response-type json
+wsk -i api create /start_training post server_ow --response-type json
+
+```
+
 ### Results
 MNIST Test Accuracy using federated learning strategy: 96.67%
