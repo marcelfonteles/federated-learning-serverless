@@ -150,3 +150,10 @@ dmypy.json
 
 # Serverless files
 .serverless/
+
+# Env file
+.env
+
+# PIDs files
+clients/pids_aws.txt
+clients/pids_ow.txt

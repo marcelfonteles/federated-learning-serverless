@@ -16,21 +16,21 @@ from src.datasets import get_dataset
 from src.update import LocalUpdate
 from src.utils import logging
 
-base_url = 'https://mm5cm3b2qf.execute-api.us-east-1.amazonaws.com/dev/'
+base_url = 'https://192.168.1.10:31001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/'
 # Subscribing to server
 client_id = -1
 # Verificar o verify=False
 response = requests.post(base_url + 'subscribe', json={"path": "subscribe"}, verify=False)
-client_id = response.json()['id']
+client_id = json.loads(response.json()['body'])['id']
 if client_id == None:
     raise 'No empty space left.'
 
 
 # Initialization: get the last version of global model
-response = requests.post(base_url + 'get_model', json={"path": "get_model"})
-bin_weights = base64.b64decode(response.text)
+response = requests.post(base_url + 'get_model', json={"path": "get_model"}, verify=False)
+bin_weights = base64.b64decode(json.loads(response.text)['body'])
 local_weights = pickle.loads(bin_weights)
-n_clients = int(response.headers['Clients-Number'])
+n_clients = int(response.json()['headers']['Clients-Number'])
 
 dataset = 'mnist'  # or mnist
 if dataset == 'mnist':
@@ -46,15 +46,15 @@ local_model.train()
 
 # Initialization: randomly select the data from dataset for this client
 headers = {'Content-Type': 'application/json'}
-response = requests.post(base_url + 'get_data', json={"path": "get_data", "client_id": client_id}, headers=headers)
-user_group = response.json()['dict_user']
-user_group = set(json.loads(user_group))
+response = requests.post(base_url + 'get_data', json={"path": "get_data", "client_id": client_id}, headers=headers, verify=False)
+user_group = json.loads(json.loads(response.json()['body'])['dict_user'])
+user_group = set(user_group)
 train_dataset, test_dataset = get_dataset(dataset, n_clients)
 
 
 # Log file path
 dirname = os.path.dirname(__file__)
-log_path = os.path.join(dirname, 'logs/' + str(client_id) + '.log')
+log_path = os.path.join(dirname, 'logs/' + str(client_id) + '_ow.log')
 logging(f'| #### Starting a new client #### |', True, log_path)
 
 
@@ -67,15 +67,15 @@ def train():
     global local_model, local_weights
     headers = {'Content-Type': 'application/json'}
     data = {"client_id": client_id}
-    res = requests.post(base_url + 'get_clients_to_train', json=data, headers=headers)
-    res_json = res.json()
+    res = requests.post(base_url + 'get_clients_to_train', json=data, headers=headers, verify=False)
+    res_json = json.loads(res.json()['body'])
     must_train = res_json['train']
     logging(f'| client_id: {client_id}, must_train: {must_train} |', True, log_path)
     if must_train:
         global_epoch = res_json['epoch']
         # Get the newest global model
-        res = requests.post(base_url + 'get_model')
-        bin_local_weights = base64.b64decode(res.content)
+        res = requests.post(base_url + 'get_model', verify=False)
+        bin_local_weights = base64.b64decode(json.loads(res.text)['body'])
         local_weights = pickle.loads(bin_local_weights)
         if dataset == 'mnist':
             local_model = CNNMnist()
@@ -96,10 +96,10 @@ def train():
         b64 = base64.b64encode(serialized).decode('utf-8')
         url = base_url + 'send_model'
         headers = {"client-id": str(client_id), 'Content-Type': 'application/json'}
-        res = requests.post(url, json={'model': b64}, headers=headers)
+        res = requests.post(url, json={'model': b64}, headers=headers, verify=False)
         print(res)
 
-
+train()
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=train, trigger="interval", seconds=15)
 scheduler.start()

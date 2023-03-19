@@ -1,7 +1,6 @@
 #!/bin/bash
-#!usr/bin/env bash
 
-file="pids.txt"
+file="$(pwd)/clients/pids_ow.txt"
 
 while read -r line; do
     kill -9 $line
