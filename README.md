@@ -141,7 +141,7 @@ docker build --platform linux/amd64 -t image-name .
     ```
     Após feito o deploy da função lambda, pega a **URL base** que será mostrada no terminal ao final da execução do comando acima.
 
-    Um exemplo de URL base: `[184321656460.dkr.ecr.us-east-1.amazonaws.com/server-serverless:latest](https://mm5cm3b2qf.execute-api.us-east-1.amazonaws.com/dev/)`
+    Um exemplo de URL base: `https://mm5cm3b2qf.execute-api.us-east-1.amazonaws.com/dev/`
 
     Todos os comandos listados acimas:
     ```
@@ -152,21 +152,20 @@ docker build --platform linux/amd64 -t image-name .
 
     Extra: veja o [tutorial](https://www.serverless.com/blog/deploying-pytorch-model-as-a-serverless-service) do framework `serverless` para mais informações.
 3. Executando o cliente
-   
+   ```bash
+    sh scripts/start_clients_aws.sh
+    ```
 
-### Running the experiments (AWS Lambda)
-You must have access to one mongodb database and fill the `MONGODB_URL` in Dockerfile
+    Para matar todos os processos dos clientes
+    ```bash
+    sh scripts/stop_clients_aws.sh
+    ```
 
-Firstly, you must create one AWS Lambda function with the Dockerfile in this repository, and you could do that by
-following this article: https://www.serverless.com/blog/deploying-pytorch-model-as-a-serverless-service
-
-After deployed the lambda function you can run the following command
+### Executando os experimentos (Apache OpenWhisk)
 ```
-sh client/start.sh
+TODO:
+Esse repositório consegue executar com o Apache OpenWhisk, porém a documentação para isso ainda não foi escrita.
 ```
-
-### Running the experiments (Apache OpenWhisk)
-To do: trying to make it work 
 
 ### Results
 MNIST Test Accuracy using federated learning strategy: 96.67%
