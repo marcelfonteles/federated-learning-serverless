@@ -6,6 +6,7 @@ import copy
 import os
 import json
 import base64
+from dotenv import load_dotenv
 
 import torch
 from PIL import Image
@@ -16,10 +17,11 @@ from src.datasets import get_dataset
 from src.update import LocalUpdate
 from src.utils import logging
 
-base_url = 'https://mm5cm3b2qf.execute-api.us-east-1.amazonaws.com/dev/'
+load_dotenv(dotenv_path='../.env')
+base_url = os.getenv('BASE_URL_AWS')
+
 # Subscribing to server
 client_id = -1
-# Verificar o verify=False
 response = requests.post(base_url + 'subscribe', json={"path": "subscribe"}, verify=False)
 client_id = response.json()['id']
 if client_id == None:

@@ -6,6 +6,7 @@ import copy
 import os
 import json
 import base64
+from dotenv import load_dotenv
 
 import torch
 from PIL import Image
@@ -16,10 +17,11 @@ from src.datasets import get_dataset
 from src.update import LocalUpdate
 from src.utils import logging
 
-base_url = 'https://192.168.1.10:31001/api/23bc46b1-71f6-4ed5-8c54-816aa4f8c502/'
+load_dotenv(dotenv_path='../.env')
+base_url = os.getenv('BASE_URL_OW')
+
 # Subscribing to server
 client_id = -1
-# Verificar o verify=False
 response = requests.post(base_url + 'subscribe', json={"path": "subscribe"}, verify=False)
 client_id = json.loads(response.json()['body'])['id']
 if client_id == None:

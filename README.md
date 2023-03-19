@@ -21,6 +21,7 @@ Pickle
 requests
 numpy
 torch
+python-dotenv
 ```
 
 ```
