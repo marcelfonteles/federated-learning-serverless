@@ -17,18 +17,19 @@ from src.datasets import get_dataset
 from src.update import LocalUpdate
 from src.utils import logging
 
+# Load environment variables
 load_dotenv(dotenv_path='../.env')
 base_url = os.getenv('BASE_URL_AWS')
 
 # Subscribing to server
-client_id = -1
 response = requests.post(base_url + 'subscribe', json={"path": "subscribe"}, verify=False)
 client_id = response.json()['id']
-if client_id == None:
+if client_id == None or client_id == -1:
     raise 'No empty space left.'
 
 
 # Initialization: get the last version of global model
+# If the global model is already initialized and trained, we will get the last version of the model
 response = requests.post(base_url + 'get_model', json={"path": "get_model"})
 bin_weights = base64.b64decode(response.text)
 local_weights = pickle.loads(bin_weights)
@@ -47,8 +48,8 @@ local_model.train()
 
 
 # Initialization: randomly select the data from dataset for this client
-headers = {'Content-Type': 'application/json'}
-response = requests.post(base_url + 'get_data', json={"path": "get_data", "client_id": client_id}, headers=headers)
+get_data_headers = {'Content-Type': 'application/json'}
+response = requests.post(base_url + 'get_data', json={"path": "get_data", "client_id": client_id}, headers=get_data_headers)
 user_group = response.json()['dict_user']
 user_group = set(json.loads(user_group))
 train_dataset, test_dataset = get_dataset(dataset, n_clients)
@@ -69,12 +70,15 @@ def train():
     global local_model, local_weights
     headers = {'Content-Type': 'application/json'}
     data = {"client_id": client_id}
+
+    # Check if it is time to train
     res = requests.post(base_url + 'get_clients_to_train', json=data, headers=headers)
     res_json = res.json()
     must_train = res_json['train']
     logging(f'| client_id: {client_id}, must_train: {must_train} |', True, log_path)
     if must_train:
         global_epoch = res_json['epoch']
+
         # Get the newest global model
         res = requests.post(base_url + 'get_model')
         bin_local_weights = base64.b64decode(res.content)
@@ -118,7 +122,8 @@ def home():
 # The response is the update weights for local model.
 @app.route("/train", methods=['POST'])
 def train():
-    return {"hello": "world", "array": [1, 2, 3], "nested": {"again": 1}}
+    # TODO: implement
+    return {"hello": "world", "array": [1, 2, 3]}
 
 
 # This route can be used to test to model prediction in client

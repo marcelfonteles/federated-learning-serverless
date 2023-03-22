@@ -35,7 +35,7 @@ def main(params):
         return home()
 
 
-# OK OK
+# OK
 def send_model(event):
     training_db = get_database()
     # Insert model data in local model table
@@ -59,7 +59,6 @@ def send_model(event):
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (0)')
         }    
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         n_clients = global_model_record['numberOfClients']
@@ -165,7 +164,7 @@ def send_model(event):
             }    
 
 
-# OK OK
+# OK
 def get_clients_to_train(event):
     training_db = get_database()
     client_id = event['client_id']
@@ -177,7 +176,6 @@ def get_clients_to_train(event):
                     "statusCode": 200,
                     "body": json.dumps('No Global Model Available (1)')
                 }
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         global_current_epoch = records[0]['currentEpoch']
@@ -213,6 +211,9 @@ def get_clients_to_train(event):
 
 
 # OK OK
+
+
+# OK
 def get_data(event):
     training_db = get_database()
     client_id = event['client_id']
@@ -224,7 +225,6 @@ def get_data(event):
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (2)')
             } 
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
     
@@ -247,7 +247,7 @@ def get_data(event):
         } 
 
 
-# OK OK
+# OK
 def get_model():
     training_db = get_database()
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
@@ -257,7 +257,6 @@ def get_model():
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (3)')
             }  
-        # raise 'No Global Model Available'
     else:
         serialized = records[0]['serialized']
 
@@ -268,7 +267,7 @@ def get_model():
     }
 
 
-# OK OK
+# OK
 def subscribe():
     training_db = get_database()
     # get global model
@@ -279,7 +278,6 @@ def subscribe():
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (4)')
             }   
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         n_clients = global_model_record['numberOfClients']
@@ -318,7 +316,6 @@ def subscribe():
                         "statusCode": 200,
                         "body": json.dumps('No Global Model Available (5)')
                     }  
-                # raise 'No Global Model Available'
             else:
                 global_model_id = records[0]['id']
             
@@ -345,6 +342,9 @@ def subscribe():
 
 
 # OK OK
+
+
+# OK
 def start_training(event):
     body = json.loads(event['body'])
     dataset = body['dataset']
@@ -409,14 +409,13 @@ def start_training(event):
     }
 
 
-# OK OK
+# OK
 def home():
     return {
         "statusCode": 200,
         "body": json.dumps('Home path')
     }
 
-    
 
 """
 BUILD STEPS

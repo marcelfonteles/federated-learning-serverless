@@ -10,8 +10,8 @@ from src.utils import average_weights, test_inference
 from src.datasets import get_test_dataset, get_user_group
 from src.database import get_database
 
+
 def server(event, context):
-    print(event)
     if 'send_model' in event['path']:
         # OK (5)
         return send_model(event)
@@ -35,7 +35,7 @@ def server(event, context):
         return home()
     
 
-# OK OK
+# OK
 def send_model(event):
     training_db = get_database()
     # Insert model data in local model table
@@ -60,7 +60,6 @@ def send_model(event):
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (0)')
         }    
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         n_clients = global_model_record['numberOfClients']
@@ -153,7 +152,6 @@ def send_model(event):
             test_acc, test_loss = test_inference(global_model, test_dataset)
 
             print(f' \n Results after {current_epoch} global rounds of training:')
-            # print("|---- Avg Train Accuracy: {:.2f}%".format(100 * train_accuracy[-1]))
             print("|---- Test Accuracy: {:.2f}%".format(100 * test_acc))
             training_db.global_models.update_one(
                 {'id': global_model_record['id']},
@@ -166,7 +164,7 @@ def send_model(event):
             }    
 
 
-# OK OK
+# OK
 def get_clients_to_train(event):
     training_db = get_database()
     body = json.loads(event['body'])
@@ -179,7 +177,6 @@ def get_clients_to_train(event):
                     "statusCode": 200,
                     "body": json.dumps('No Global Model Available (1)')
                 }
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         global_current_epoch = records[0]['currentEpoch']
@@ -214,7 +211,10 @@ def get_clients_to_train(event):
             } 
 
 
-# OK OK
+# OK
+
+
+# OK
 def get_data(event):
     training_db = get_database()
     body = json.loads(event['body'])
@@ -227,7 +227,6 @@ def get_data(event):
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (2)')
             } 
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
     
@@ -239,6 +238,8 @@ def get_data(event):
         if c['datasetIndexes'] != []:
             dict_users[c['id']] = set(json.loads(c['datasetIndexes']))
 
+    # Get an array of samples ids that will be sent to client as `user data`.
+    # This is the only time that the server see the data.
     dict_user = get_user_group(global_model_record['dataset'], global_model_record['numberOfClients'], dict_users)
     training_db.clients.update_one(
         {'globalModelId': global_model_record['id'], 'id': client['id']},
@@ -250,7 +251,7 @@ def get_data(event):
         } 
 
 
-# OK OK
+# OK
 def get_model():
     training_db = get_database()
     records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
@@ -260,7 +261,6 @@ def get_model():
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (3)')
             }  
-        # raise 'No Global Model Available'
     else:
         serialized = records[0]['serialized']
 
@@ -271,7 +271,7 @@ def get_model():
     }
 
 
-# OK OK
+# OK
 def subscribe():
     training_db = get_database()
     # get global model
@@ -282,7 +282,6 @@ def subscribe():
                 "statusCode": 200,
                 "body": json.dumps('No Global Model Available (4)')
             }   
-        # raise 'No Global Model Available'
     else:
         global_model_record = records[0]
         n_clients = global_model_record['numberOfClients']
@@ -290,8 +289,6 @@ def subscribe():
 
     # get clients of this model
     clients = [record for record in training_db.clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.ASCENDING)]
-
-
     if len(clients) < n_clients:
         client_id = len(clients)
         client = {
@@ -304,11 +301,16 @@ def subscribe():
 
         training_db.clients.insert_one(client)
         clients.append(client)
+
+        # When all needed clients subscribed
         if len(clients) == n_clients:
-            
+            # defining clients id that will be training at this epoch
             m = max(int(n_clients_to_train), 1)
             clients_id_to_train = np.random.choice(range(n_clients), m, replace=False).tolist()
+
             records = [record for record in training_db.training_clients.find().sort('createdAt', pymongo.DESCENDING)]
+
+            # this IF CONDITION bellow is used only to define one id to record that will be saved on database
             if len(records) == 0:
                 training_clients_id = 1
             else:
@@ -321,11 +323,10 @@ def subscribe():
                         "statusCode": 200,
                         "body": json.dumps('No Global Model Available (5)')
                     }  
-                # raise 'No Global Model Available'
             else:
                 global_model_id = records[0]['id']
             
-
+            # Inserting on database the clients that will be training on this epoch
             training_db.training_clients.insert_one({
                 'id': training_clients_id,
                 'clients': clients_id_to_train,
@@ -347,12 +348,15 @@ def subscribe():
             }  
 
 
-# OK OK
+# OK
 def start_training(event):
+    # Body params
     body = json.loads(event['body'])
     dataset = body['dataset']
     number_of_clients = body['numberOfClients']
     frac_to_train = body['fracToTrain']
+
+    # Setting dataset
     if dataset == 'mnist':
         # Training for MNIST
         global_model = CNNMnist()
@@ -409,8 +413,7 @@ def start_training(event):
         "body": json.dumps('start_training path')
     }
 
-
-# OK OK
+# OK
 def home():
     return {
         "statusCode": 200,
