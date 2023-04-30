@@ -7,7 +7,7 @@ FUNCTION=subscribe
 
 rm $(echo $FUNCTION).zip
 
-zip -r $(echo $FUNCTION).zip __main__.PY
+zip -r $(echo $FUNCTION).zip __main__.py
 
 wsk action delete $(echo $FUNCTION)
 
