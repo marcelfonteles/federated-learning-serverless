@@ -185,4 +185,4 @@ wsk -i api create /get_data post server_ow --response-type json
 wsk -i api create /get_model post server_ow --response-type json
 wsk -i api create /subscribe post server_ow --response-type json
 wsk -i api create /start_training post server_ow --response-type json
-""" 
+"""
