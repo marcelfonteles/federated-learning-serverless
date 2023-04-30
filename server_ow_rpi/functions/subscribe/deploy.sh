@@ -13,4 +13,4 @@ wsk action delete $(echo $FUNCTION)
 
 wsk action create $(echo $FUNCTION) --docker marcelfonteles/server_ow_arm_3 $(echo  $FUNCTION).zip --web true -m 512 -t 240000
 
-wsk api create -name federated /$($FUNCTION) post $($FUNCTION) --response-type json
+wsk api create -n federated /$($FUNCTION) post $($FUNCTION) --response-type json
