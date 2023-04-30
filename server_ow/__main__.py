@@ -421,33 +421,32 @@ def home():
 """
 BUILD STEPS
 
+## Build Dockerfile. Will be used as RUNTIME
 docker build -t server_ow .
 docker tag server_ow marcelfonteles/server_ow
 docker push marcelfonteles/server_ow
 
 ## Delete action
+### If there is an action created with the same same, you need to delete it
 wsk -i action delete server_ow
 
 ## Delete zip file
+### If there is an zip file with the same name
 rm server_ow.zip
 
 ## Create zip file
-zip -r server_ow.zip __main__.py another
 zip -r server_ow.zip ./*
 
 ## Deploy action
-wsk -i action create server_ow --docker marcelfonteles/server_ow __main__.py
+### Deploy an action with only one file
 wsk -i action create server_ow --docker marcelfonteles/server_ow __main__.py --web
 
-wsk -i action create server_ow --docker marcelfonteles/server_ow server_ow.zip
+### Deploy an action with multiple files
 wsk -i action create server_ow --docker marcelfonteles/server_ow server_ow.zip --web true
 
 ## Test action
 wsk -i action invoke server_ow --result
 wsk -i action invoke server_ow --result -v
-
-## Crate API route
-wsk -i api create /jokes post server_ow --response-type json
 
 ## All steps together
 wsk -i action delete server_ow && rm server_ow.zip && zip -r server_ow.zip ./* && wsk -i action create server_ow --docker marcelfonteles/server_ow server_ow.zip --web true
@@ -459,5 +458,4 @@ wsk -i api create /get_data post server_ow --response-type json
 wsk -i api create /get_model post server_ow --response-type json
 wsk -i api create /subscribe post server_ow --response-type json
 wsk -i api create /start_training post server_ow --response-type json
-
 """ 
