@@ -1,4 +1,7 @@
-echo 'Attention: change the mongo db URL'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${RED}ATTENTION:${NC} change the mongo db URL"
 
 FUNCTION=subscribe
 
