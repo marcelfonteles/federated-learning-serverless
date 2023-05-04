@@ -3,7 +3,7 @@ export OPENWHISK_TMP_DIR=$OPENWHISK_HOME/tmp
 export PATH=$PATH:$OPENWHISK_HOME/bin
 alias wsk='wsk -i'
 
-cd server_ow_rpi/functions/get_clients_to_train
+cd ./functions/get_clients_to_train
 chmod +x deploy.sh
 ./deploy.sh
 cd ../get_data
