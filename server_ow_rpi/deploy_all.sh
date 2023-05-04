@@ -7,14 +7,16 @@ cd ./functions/get_clients_to_train
 chmod +x deploy.sh
 ./deploy.sh
 
-sleep 3
+echo 'sleeping...'
+sleep 8
+echo 'sleeping...[OK]'
 
 cd ../get_data
 chmod +x deploy.sh
 ./deploy.sh
 
 echo 'sleeping...'
-sleep 3
+sleep 8
 echo 'sleeping...[OK]'
 
 cd ../get_model
@@ -22,7 +24,7 @@ chmod +x deploy.sh
 ./deploy.sh
 
 echo 'sleeping...'
-sleep 3
+sleep 8
 echo 'sleeping...[OK]'
 
 cd ../send_model
@@ -30,7 +32,7 @@ chmod +x deploy.sh
 ./deploy.sh
 
 echo 'sleeping...'
-sleep 3
+sleep 8
 echo 'sleeping...[OK]'
 
 cd ../start_training
@@ -38,7 +40,7 @@ chmod +x deploy.sh
 ./deploy.sh
 
 echo 'sleeping...'
-sleep 3
+sleep 8
 echo 'sleeping...[OK]'
 
 cd ../subscribe
