@@ -13,25 +13,33 @@ cd ../get_data
 chmod +x deploy.sh
 ./deploy.sh
 
+echo 'sleeping...'
 sleep 3
+echo 'sleeping...[OK]'
 
 cd ../get_model
 chmod +x deploy.sh
 ./deploy.sh
 
+echo 'sleeping...'
 sleep 3
+echo 'sleeping...[OK]'
 
 cd ../send_model
 chmod +x deploy.sh
 ./deploy.sh
 
+echo 'sleeping...'
 sleep 3
+echo 'sleeping...[OK]'
 
 cd ../start_training
 chmod +x deploy.sh
 ./deploy.sh
 
+echo 'sleeping...'
 sleep 3
+echo 'sleeping...[OK]'
 
 cd ../subscribe
 chmod +x deploy.sh
