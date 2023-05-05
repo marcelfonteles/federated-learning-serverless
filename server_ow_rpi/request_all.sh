@@ -8,7 +8,7 @@ chmod +x request.sh
 ./request.sh
 
 echo 'sleeping...'
-sleep 8
+sleep 15
 echo 'sleeping...[OK]'
 
 cd ../get_data
@@ -16,7 +16,7 @@ chmod +x request.sh
 ./request.sh
 
 echo 'sleeping...'
-sleep 8
+sleep 15
 echo 'sleeping...[OK]'
 
 cd ../get_model
@@ -24,7 +24,7 @@ chmod +x request.sh
 ./request.sh
 
 echo 'sleeping...'
-sleep 8
+sleep 15
 echo 'sleeping...[OK]'
 
 cd ../send_model
@@ -32,7 +32,7 @@ chmod +x request.sh
 ./request.sh
 
 echo 'sleeping...'
-sleep 8
+sleep 15
 echo 'sleeping...[OK]'
 
 cd ../start_training
@@ -40,7 +40,7 @@ chmod +x request.sh
 ./request.sh
 
 echo 'sleeping...'
-sleep 8
+sleep 15
 echo 'sleeping...[OK]'
 
 cd ../subscribe
