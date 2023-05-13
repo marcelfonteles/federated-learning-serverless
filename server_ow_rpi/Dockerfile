@@ -11,3 +11,5 @@ RUN /usr/local/bin/python3.6 -m pip install pymongo pymongo[srv]
 ENV MONGODB_URL=
 
 RUN ln -sf /usr/local/bin/python3.6 /usr/local/bin/python
+
+RUN mkdir /containers
