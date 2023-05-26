@@ -1,14 +1,14 @@
-service: server-serverless-1
+service: server-serverless-metrics
 
 provider:
   name: aws #cloud provider
   region: us-east-1
-  memorySize: 2048 #memory usage
+  memorySize: 640 #memory usage
   timeout: 300
 
 functions:
   server-function:
-    image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/server-serverless:latest
+    image: 184190656151.dkr.ecr.us-east-1.amazonaws.com/server-serverless-metrics:latest
     events:
       - http:
           path: get_data

@@ -19,10 +19,11 @@ def test_inference(model, test_dataset):
     """
 
     model.eval()
-    loss, total, correct = 0.0, 0.0, 0.0
+    loss, loss2, total, correct = 0.0, 0.0, 0.0, 0.0
 
     device = 'cpu'
     criterion = nn.NLLLoss().to(device)
+    # criterion2 = nn.MSELoss().to(device)
     testloader = DataLoader(test_dataset, batch_size=128,
                             shuffle=False)
 
@@ -32,7 +33,10 @@ def test_inference(model, test_dataset):
         # Inference
         outputs = model(images)
         batch_loss = criterion(outputs, labels)
+        # batch_loss2 = criterion2(outputs, labels)
+
         loss += batch_loss.item()
+        # loss2 += batch_loss2.item()
 
         # Prediction
         _, pred_labels = torch.max(outputs, 1)
@@ -41,7 +45,7 @@ def test_inference(model, test_dataset):
         total += len(labels)
 
     accuracy = correct/total
-    return accuracy, loss
+    return accuracy, loss#, loss2
 
 
 def logging(message, write_to_file, filepath):

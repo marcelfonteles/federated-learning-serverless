@@ -47,13 +47,13 @@ def send_model(event):
     serialized = base64.b64decode(model)
     content = pickle.loads(serialized)
 
-    records = [record for record in training_db.local_models.find().sort('id', pymongo.DESCENDING)]
+    records = [record for record in training_db.local_models.find().sort('id', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         local_model_id = 1
     else:
         local_model_id = records[0]['id'] + 1
 
-    records = [record for record in training_db.global_models.find().sort('id', pymongo.DESCENDING)]
+    records = [record for record in training_db.global_models.find().sort('id', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         print('No Global Model Available (0)')
         return {
@@ -70,7 +70,7 @@ def send_model(event):
         'clientId': client_id,
         'globalModelId': global_model_record['id'],
     }
-    records = [record for record in training_db.local_models.find(find_query).sort('id', pymongo.DESCENDING)]
+    records = [record for record in training_db.local_models.find(find_query).sort('id', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         training_db.local_models.insert_one({
             'id': local_model_id,
@@ -123,7 +123,7 @@ def send_model(event):
             m = max(int(n_clients_to_train), 1)
             clients_id_to_train = np.random.choice(range(n_clients), m, replace=False).tolist()
 
-            records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('createdAt', pymongo.DESCENDING)]
+            records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('createdAt', pymongo.DESCENDING).limit(1)]
             if len(records) == 0:
                 training_clients_id = 1
             else:
@@ -143,6 +143,21 @@ def send_model(event):
                 'createdAt': datetime.now(),
                 'updatedAt': datetime.now(),
             })
+
+            test_dataset = get_test_dataset(global_model_record['dataset'])
+            test_acc, test_loss = test_inference(global_model, test_dataset)
+
+            training_db.metrics.insert_one({
+                'globalModelId': global_model_record['id'],
+                'currentEpoch': global_model_record['currentEpoch'],
+                'accuracy': test_acc,
+                'NLLLoss': test_loss,
+                # 'MSELoss': test_loss2,
+                'dataset': global_model_record['dataset'],
+                'fracToTrain': global_model_record['fracToTrain'],
+                'numberOfClients': global_model_record['numberOfClients'],
+                'createdAt': datetime.now(),
+            })
         else:
             training_db.global_models.update_one(
                 {'id': global_model_record['id']},
@@ -160,6 +175,18 @@ def send_model(event):
                 {'$set': {'testAccuracy': test_acc, 'updatedAt': datetime.now()}
             })
 
+            training_db.metrics.insert_one({
+                'globalModelId': global_model_record['id'],
+                'currentEpoch': global_model_record['currentEpoch'],
+                'accuracy': test_acc,
+                'NLLLoss': test_loss,
+                # 'MSELoss': test_loss2,
+                'dataset': global_model_record['dataset'],
+                'fracToTrain': global_model_record['fracToTrain'],
+                'numberOfClients': global_model_record['numberOfClients'],
+                'createdAt': datetime.now(),
+            })
+
     return {
                 "statusCode": 200,
                 "body": json.dumps('send_model finish')
@@ -172,7 +199,7 @@ def get_clients_to_train(event):
     body = json.loads(event['body'])
     client_id = body['client_id']
     
-    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
+    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         print('No Global Model Available (1)')
         return {
@@ -184,7 +211,7 @@ def get_clients_to_train(event):
         global_model_record = records[0]
         global_current_epoch = records[0]['currentEpoch']
 
-    records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.DESCENDING)]
+    records = [record for record in training_db.training_clients.find({'globalModelId': global_model_record['id']}).sort('id', pymongo.DESCENDING).limit(1)]
     if len(records) == 0 or global_model_record['isTraining'] == False:
         return {
                 "statusCode": 200,
@@ -220,7 +247,7 @@ def get_data(event):
     body = json.loads(event['body'])
     client_id = body['client_id']
     # get global model
-    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
+    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         print('No Global Model Available (2)')
         return {
@@ -253,7 +280,7 @@ def get_data(event):
 # OK OK
 def get_model():
     training_db = get_database()
-    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
+    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         print('No Global Model Available (3)')
         return {
@@ -275,7 +302,7 @@ def get_model():
 def subscribe():
     training_db = get_database()
     # get global model
-    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
+    records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:
         print('No Global Model Available (4)')
         return {
@@ -308,13 +335,13 @@ def subscribe():
             
             m = max(int(n_clients_to_train), 1)
             clients_id_to_train = np.random.choice(range(n_clients), m, replace=False).tolist()
-            records = [record for record in training_db.training_clients.find().sort('createdAt', pymongo.DESCENDING)]
+            records = [record for record in training_db.training_clients.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
             if len(records) == 0:
                 training_clients_id = 1
             else:
                 training_clients_id = records[0]['id'] + 1
 
-            records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING)]
+            records = [record for record in training_db.global_models.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
             if len(records) == 0:
                 print('No Global Model Available (5)')
                 return {
@@ -364,7 +391,7 @@ def start_training(event):
     # MongoDB Connection
     training_db = get_database()
     global_models_table = training_db.global_models
-    records = [record for record in global_models_table.find().sort('createdAt', pymongo.DESCENDING)]
+    records = [record for record in global_models_table.find().sort('createdAt', pymongo.DESCENDING).limit(1)]
     if len(records) == 0:  # create a new record on db
         global_weights = global_model.state_dict()
         serialized = pickle.dumps(global_weights)
